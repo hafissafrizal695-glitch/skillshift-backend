@@ -1135,7 +1135,14 @@ div[class*="container"],
 
 /* ── FILTER BAR OVERFLOW FIX ── */
 .filter-bar-container,
-section#jobs-section {
+section#jobs-section,
+section#jobs-section > div,
+.filter-bar-wrapper {
+  overflow: visible !important;
+}
+
+/* Ensure main content area doesn't clip dropdowns */
+main {
   overflow: visible !important;
 }
 
@@ -1143,6 +1150,7 @@ section#jobs-section {
 .relative.flex-shrink-0 {
   z-index: 50;
   position: relative !important;
+  overflow: visible !important;
 }
 
 /* Dropdown menu - ensure it appears above everything */

@@ -1548,7 +1548,7 @@ export default function App() {
 
       {/* ── NAVBAR (sembunyikan saat di halaman login) ── */}
       {!(activeTab === 'login' && !isLoggedIn) && (
-        <nav className="nav-bar py-3 px-6 md:px-10 flex justify-between items-center sticky top-0 z-50 bg-white/80 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.03)] border-b border-white">
+        <nav className="nav-bar py-3 px-6 md:px-10 flex justify-between items-center sticky top-0 z-[100] bg-white shadow-[0_4px_30px_rgba(0,0,0,0.08)] border-b border-gray-100">
           <SkillShiftLogo onClick={() => setActiveTab('home')} small />
 
           <div className="hidden md:flex items-center gap-9">
@@ -1976,10 +1976,10 @@ export default function App() {
           <section
             id="jobs-section"
             ref={jobsRef}
-            className="px-6 md:px-10 mt-6 pb-12 relative z-20"
+            className="px-6 md:px-10 mt-6 mb-8 relative z-20"
           >
             <div className="max-w-7xl mx-auto scroll-mt-28">
-              <div className="filter-bar-wrapper bg-white/90 rounded-[32px] shadow-[0_16px_50px_rgba(0,0,0,0.06)] p-3.5 flex flex-col sm:flex-row flex-wrap lg:flex-nowrap items-start sm:items-center gap-3 border border-white w-full max-w-full overflow-visible">
+              <div className="filter-bar-wrapper bg-white rounded-[24px] shadow-[0_8px_40px_rgba(0,0,0,0.08)] p-4 sm:p-5 flex flex-col sm:flex-row flex-wrap lg:flex-nowrap items-start sm:items-center gap-4 border border-gray-100 w-full max-w-full">
                 {[
                   {
                     label: 'Tipe Pekerjaan',
@@ -2006,11 +2006,10 @@ export default function App() {
                     onChange: (v) => setFilterSkill([v]),
                   },
                 ].map(({ label, options, value, onChange }, i) => {
-                  console.log(`[Filter] ${label}: ${options?.length} items, data:`, options);
                   return (
                   <React.Fragment key={label}>
-                    <div className="flex-1 min-w-0 sm:min-w-[120px] md:min-w-[140px] px-2 py-1.5 w-full sm:w-auto">
-                      <p className="text-[10px] font-black text-gray-400 mb-1 pl-2 sm:pl-4 uppercase tracking-widest whitespace-nowrap">
+                    <div className="flex-1 min-w-0 sm:min-w-[140px] md:min-w-[160px] px-1 py-1 w-full sm:w-auto">
+                      <p className="text-[10px] font-black text-gray-400 mb-1.5 pl-1 uppercase tracking-widest whitespace-nowrap">
                         {label}
                       </p>
                       <DropdownFilter
@@ -2021,13 +2020,13 @@ export default function App() {
                       />
                     </div>
                     {i < 3 && (
-                      <div className="hidden lg:block w-px h-12 bg-gray-200 flex-shrink-0" />
+                      <div className="hidden lg:block w-px h-12 bg-gray-200 flex-shrink-0 self-center" />
                     )}
                   </React.Fragment>
                 );
                 })}
 
-                <div className="w-full mt-3 lg:mt-0 px-2 lg:min-w-[280px]">
+                <div className="w-full mt-2 lg:mt-0 px-1 lg:min-w-[200px] lg:self-end">
                   <button
                     onClick={() => handleNavClick('jobs')}
                     className="w-full bg-gradient-to-r from-[#6b1020] to-[#8b1a2e] text-white px-9 py-4 rounded-2xl font-black text-[13px] uppercase tracking-widest flex items-center justify-center gap-3 hover:shadow-[0_8px_25px_rgba(61,10,20,0.4)] hover:-translate-y-1 transition-all shadow-md"
