@@ -1137,8 +1137,11 @@ div[class*="container"],
 .filter-bar-container,
 section#jobs-section,
 section#jobs-section > div,
+section#jobs-section > div > div,
 .filter-bar-wrapper {
   overflow: visible !important;
+  position: relative !important;
+  z-index: inherit !important;
 }
 
 /* Ensure main content area doesn't clip dropdowns */
@@ -1148,7 +1151,7 @@ main {
 
 /* ── DROPDOWN Z-INDEX AND VISIBILITY FIX ── */
 .relative.flex-shrink-0 {
-  z-index: 50;
+  z-index: auto !important;
   position: relative !important;
   overflow: visible !important;
 }
@@ -1166,6 +1169,7 @@ main {
   width: auto;
   margin-top: 8px;
   pointer-events: auto !important;
+  background: white !important;
 }
 
 /* Force show dropdown options */
@@ -1176,6 +1180,9 @@ main {
   max-height: none !important;
   overflow: visible !important;
   display: block !important;
+  z-index: 99999 !important;
+  position: absolute !important;
+  background: white !important;
 }
 
 /* Mobile filter bar dropdown fix */
