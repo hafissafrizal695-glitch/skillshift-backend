@@ -1528,7 +1528,7 @@ main {
     align-items: stretch;
     width: 100% !important;
     max-width: 100% !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   .filter-bar > div {

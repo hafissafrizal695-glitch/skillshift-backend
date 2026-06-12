@@ -1976,10 +1976,10 @@ export default function App() {
           <section
             id="jobs-section"
             ref={jobsRef}
-            className="px-6 md:px-10 mt-6 mb-8 relative z-20"
+            className="px-6 md:px-10 mt-6 mb-8 relative z-50"
           >
             <div className="max-w-7xl mx-auto scroll-mt-28">
-              <div className="filter-bar-wrapper relative z-30 bg-white rounded-[24px] shadow-[0_8px_40px_rgba(0,0,0,0.08)] p-4 sm:p-5 flex flex-col sm:flex-row flex-wrap lg:flex-nowrap items-start sm:items-center gap-4 border border-gray-100 w-full max-w-full">
+              <div className="filter-bar-wrapper relative z-[60] bg-white rounded-[24px] shadow-[0_8px_40px_rgba(0,0,0,0.08)] p-4 sm:p-5 flex flex-col sm:flex-row flex-wrap lg:flex-nowrap items-start sm:items-center gap-4 border border-gray-100 w-full max-w-full">
                 {[
                   {
                     label: 'Tipe Pekerjaan',
