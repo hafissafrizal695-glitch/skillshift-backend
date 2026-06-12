@@ -180,7 +180,7 @@ function DropdownFilter({ label, options, selected, onSelect, multi = false }) {
   const displayLabel = getDisplayLabel();
 
   return (
-    <div className="relative flex-shrink-0" ref={ref} style={{ position: 'relative', zIndex: open ? 99999 : 50 }}>
+    <div className="relative flex-shrink-0 isolate" ref={ref} style={{ position: 'relative', zIndex: open ? 99999 : 50 }}>
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -1979,7 +1979,7 @@ export default function App() {
             className="px-6 md:px-10 mt-6 mb-8 relative z-20"
           >
             <div className="max-w-7xl mx-auto scroll-mt-28">
-              <div className="filter-bar-wrapper bg-white rounded-[24px] shadow-[0_8px_40px_rgba(0,0,0,0.08)] p-4 sm:p-5 flex flex-col sm:flex-row flex-wrap lg:flex-nowrap items-start sm:items-center gap-4 border border-gray-100 w-full max-w-full">
+              <div className="filter-bar-wrapper relative z-30 bg-white rounded-[24px] shadow-[0_8px_40px_rgba(0,0,0,0.08)] p-4 sm:p-5 flex flex-col sm:flex-row flex-wrap lg:flex-nowrap items-start sm:items-center gap-4 border border-gray-100 w-full max-w-full">
                 {[
                   {
                     label: 'Tipe Pekerjaan',
@@ -2052,7 +2052,7 @@ export default function App() {
           </section>
 
           {/* Job Directory */}
-          <section className="px-6 md:px-10 pb-20 relative z-10">
+          <section className="px-6 md:px-10 pb-20 relative z-0">
             <div className="max-w-7xl mx-auto">
               <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 border-b border-gray-200/50 pb-6 gap-4">
                 <div className="flex items-center gap-5">
