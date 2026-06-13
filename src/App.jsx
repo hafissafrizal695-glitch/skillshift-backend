@@ -1463,14 +1463,19 @@ export default function App() {
       const method = editingJobId ? 'PUT' : 'POST';
       const url = editingJobId ? `${API_URL}/jobs/${editingJobId}` : `${API_URL}/jobs`;
 
-      // Siapkan payload - konversi skills ke string jika array
+      // Siapkan payload - konversi skills string ke array
+      const skillsArray = adminForm.skills
+        ?.split(',')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0) || [];
+
       const payload = {
         title: adminForm.title?.trim() || '',
         company: adminForm.company?.trim() || '',
         location: adminForm.location?.trim() || '',
         type: adminForm.type || 'Onsite',
         category: adminForm.category || 'F&B',
-        skills: adminForm.skills?.trim() || '',
+        skills: skillsArray,
         hours: adminForm.hours?.trim() || '',
         minAge: parseInt(adminForm.minAge) || 18,
         salary: adminForm.salary?.trim() || '',
