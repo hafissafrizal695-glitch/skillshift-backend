@@ -1493,8 +1493,12 @@ export default function App() {
       console.log('Saving job to:', url);
       console.log('Payload:', payload);
 
+      // Wake up backend dulu dengan GET request
+      await fetch(`${API_URL}/jobs`).catch(() => {});
+      await new Promise(r => setTimeout(r, 500)); // wait 500ms for backend to wake up
+
       // Fungsi untuk fetch dengan retry
-      const fetchWithRetry = async (fetchUrl, options, retries = 2) => {
+      const fetchWithRetry = async (fetchUrl, options, retries = 3) => {
         let lastError;
         for (let i = 0; i < retries; i++) {
           try {
@@ -1502,7 +1506,8 @@ export default function App() {
             return res;
           } catch (err) {
             lastError = err;
-            if (i < retries - 1) await new Promise(r => setTimeout(r, 1000)); // wait 1s before retry
+            console.log(`Attempt ${i + 1} failed, retrying...`);
+            if (i < retries - 1) await new Promise(r => setTimeout(r, 1500)); // wait 1.5s before retry
           }
         }
         throw lastError;
