@@ -1493,7 +1493,22 @@ export default function App() {
       console.log('Saving job to:', url);
       console.log('Payload:', payload);
 
-      const res = await fetch(url, {
+      // Fungsi untuk fetch dengan retry
+      const fetchWithRetry = async (fetchUrl, options, retries = 2) => {
+        let lastError;
+        for (let i = 0; i < retries; i++) {
+          try {
+            const res = await fetch(fetchUrl, options);
+            return res;
+          } catch (err) {
+            lastError = err;
+            if (i < retries - 1) await new Promise(r => setTimeout(r, 1000)); // wait 1s before retry
+          }
+        }
+        throw lastError;
+      };
+
+      const res = await fetchWithRetry(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
