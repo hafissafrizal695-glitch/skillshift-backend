@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import './App.css';
 import LoginPage from './components/LoginPage';
 
-const API_URL = (import.meta.env.VITE_API_URL || 'https://skillshift-backend-production.up.railway.app') + '/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://skillshift-backend-production.up.railway.app/api';
 
 // ─── DATA (dihapus, sekarang dari database) ────────────────────────────────
 // Data diambil dari server SQLite
@@ -136,37 +136,90 @@ function SkillShiftLogo({ onClick, small }) {
   );
 }
 
-// ─── DROPDOWN FILTER (FIXED NESTING) ─────────────────────────────────────────
-function DropdownFilter({ label, options, selected, onSelect, multi = false }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+// ─── PREMIUM CUSTOM DROPDOWN ──────────────────────────────────────────────
+function PremiumDropdown({ label, options, selected, onSelect, multi = false }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const containerRef = useRef(null);
+  const listRef = useRef(null);
 
+  // Close on outside click
   useEffect(() => {
-    const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
     };
-    document.addEventListener('click', handler, true);
-    return () => document.removeEventListener('click', handler, true);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const isActive = multi
-    ? selected.length > 0 && !(selected.length === 1 && selected[0] === 'Semua')
-    : selected !== 'Semua';
+  // Keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (!options) return;
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setActiveIndex(prev => prev < options.length - 1 ? prev + 1 : 0);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setActiveIndex(prev => prev > 0 ? prev - 1 : options.length - 1);
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (activeIndex >= 0 && options[activeIndex]) {
+            handleSelect(options[activeIndex]);
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          setIsOpen(false);
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, activeIndex, options]);
+
+  // Scroll active item into view
+  useEffect(() => {
+    if (activeIndex >= 0 && listRef.current) {
+      const items = listRef.current.querySelectorAll('.premium-dropdown-item');
+      if (items[activeIndex]) {
+        items[activeIndex].scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }, [activeIndex]);
+
+  const isSelected = (opt) => {
+    if (multi) {
+      return selected.includes(opt);
+    }
+    return selected === opt;
+  };
 
   const handleSelect = (opt) => {
     if (!multi) {
       onSelect(opt);
-      setOpen(false);
+      setIsOpen(false);
     } else {
       if (opt === 'Semua') {
         onSelect(['Semua']);
         return;
       }
-      const current = selected.filter((s) => s !== 'Semua');
+      const current = selected.filter(s => s !== 'Semua');
       if (current.includes(opt)) {
-        const next = current.filter((s) => s !== opt);
+        const next = current.filter(s => s !== opt);
         onSelect(next.length === 0 ? ['Semua'] : next);
-      } else onSelect([...current, opt]);
+      } else {
+        onSelect([...current, opt]);
+      }
     }
   };
 
@@ -177,72 +230,78 @@ function DropdownFilter({ label, options, selected, onSelect, multi = false }) {
     }
     return selected === 'Semua' ? label : selected;
   };
-  const displayLabel = getDisplayLabel();
+
+  const isActive = multi
+    ? selected.length > 0 && !(selected.length === 1 && selected[0] === 'Semua')
+    : selected !== 'Semua';
 
   return (
-    <div className="relative flex-shrink-0" ref={ref}>
+    <div className="premium-dropdown" ref={containerRef}>
+      {/* Trigger Button */}
       <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen((o) => !o);
-        }}
-        className={`flex items-center gap-2 px-4 py-2.5 text-[12px] font-bold text-gray-800 transition-all whitespace-nowrap min-w-[100px] sm:min-w-[130px] justify-between hover:text-maroon rounded-xl hover:bg-maroon/5 ${isActive ? 'text-maroon bg-maroon/5' : ''}`}
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`premium-dropdown-trigger ${isOpen ? 'open' : ''} ${isActive ? 'active' : ''}`}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
       >
-        <span className="truncate max-w-[80px] sm:max-w-[110px]">{displayLabel}</span>
+        <span className="premium-dropdown-value">{getDisplayLabel()}</span>
         <svg
-          className={`w-4 h-4 flex-shrink-0 transition-transform ${open ? 'rotate-180 text-maroon' : 'text-gray-400'}`}
-          fill="none"
+          className={`premium-dropdown-chevron ${isOpen ? 'rotated' : ''}`}
           viewBox="0 0 24 24"
+          fill="none"
           stroke="currentColor"
-          strokeWidth={2.5}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          <path d="M6 9l6 6 6-6" />
         </svg>
       </button>
 
-      {/* Menu Opsi Utama */}
+      {/* Dropdown Menu */}
       <div
-        className={`dropdown-options absolute top-full left-0 mt-3 z-[99999] bg-white border border-gray-100 shadow-[0_12px_40px_rgba(0,0,0,0.15)] rounded-2xl py-3 px-2 min-w-[220px] ${open ? 'block' : 'hidden'}`}
-        style={{
-          zIndex: 99999,
-          visibility: open ? 'visible' : 'hidden',
-          opacity: open ? 1 : 0,
-          transition: 'opacity 0.2s ease, visibility 0.2s ease',
-          maxHeight: open ? '400px' : '0',
-          overflow: open ? 'auto' : 'hidden',
-        }}
-        onClick={(e) => e.stopPropagation()}
+        className={`premium-dropdown-menu ${isOpen ? 'open' : ''}`}
+        role="listbox"
       >
-        {options?.map((opt) => {
-          const isSel = multi ? selected.includes(opt) : selected === opt;
-          return (
-            <button
-              key={opt}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleSelect(opt);
-              }}
-              className={`w-full text-left px-5 py-2.5 text-[12px] font-bold transition-all flex items-center gap-3 ${isSel ? 'text-maroon bg-maroon/5' : 'text-gray-600 hover:bg-gray-50 hover:text-maroon'}`}
-            >
-              {multi && (
-                <span
-                  className={`w-4 h-4 border rounded-md flex-shrink-0 flex items-center justify-center transition-all ${isSel ? 'bg-maroon border-maroon' : 'border-gray-300'}`}
-                >
-                  {isSel && (
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </span>
-              )}
-              {opt}
-            </button>
-          );
-        })}
+        <div className="premium-dropdown-inner" ref={listRef}>
+          {options?.map((opt, index) => {
+            const selected = isSelected(opt);
+            return (
+              <button
+                key={opt}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                onClick={() => handleSelect(opt)}
+                onMouseEnter={() => setActiveIndex(index)}
+                className={`premium-dropdown-item ${selected ? 'selected' : ''} ${activeIndex === index ? 'highlighted' : ''}`}
+              >
+                <span className="premium-dropdown-item-text">{opt}</span>
+                {selected && (
+                  <svg
+                    className="premium-dropdown-check"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 }
+
+// Alias for backward compatibility
+const DropdownFilter = PremiumDropdown;
 
 // ─── JOB CARD (UTUH & LENGKAP) ──────────────────────────────────────────────
 function JobCard({ job, savedJobs, onSave, onSelect }) {
@@ -261,17 +320,18 @@ function JobCard({ job, savedJobs, onSave, onSelect }) {
   return (
     <div
       onClick={() => onSelect(job)}
-      className="bg-white/90 backdrop-blur-md rounded-[32px] overflow-hidden border border-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col pb-4 relative min-h-[460px] cursor-pointer group"
+      className="bg-white rounded-[28px] overflow-hidden border border-gray-100 shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.14)] hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer group relative"
     >
-      <div className="relative h-[200px] overflow-hidden p-2 flex-shrink-0">
+      {/* Image Section */}
+      <div className="relative h-[190px] overflow-hidden flex-shrink-0">
         {job.image ? (
           <img
             src={job.image}
             alt={job.title}
-            className="w-full h-full object-cover rounded-[24px] group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-maroon/20 to-maroon/5 rounded-[24px] flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-[#8B1538]/20 to-[#8B1538]/5 flex items-center justify-center">
             <img
               src={catIcon[job.category] || '/images/lainnya.png'}
               alt={job.category}
@@ -280,67 +340,104 @@ function JobCard({ job, savedJobs, onSave, onSelect }) {
           </div>
         )}
 
-        <span className="absolute top-5 left-5 text-[9px] font-black uppercase tracking-widest bg-white/90 text-maroon backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
+        {/* Category Badge */}
+        <span className="absolute top-3 left-3 text-[9px] font-semibold uppercase tracking-wide bg-white text-[#8B1538] px-2.5 py-1 rounded-full border border-gray-200 shadow-sm">
           {job.category}
         </span>
+
+        {/* Bookmark Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onSave(job);
+          }}
+          className={`absolute top-3 right-3 w-[38px] h-[38px] rounded-full flex items-center justify-center shadow-md transition-all duration-200 ${
+            isSaved
+              ? 'bg-[#8B1538] text-white'
+              : 'bg-white text-gray-400 hover:text-[#8B1538]'
+          }`}
+        >
+          <svg
+            className="w-4 h-4"
+            fill={isSaved ? "currentColor" : "none"}
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.5}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+          </svg>
+        </button>
       </div>
 
-      <div className="px-5 pt-2 pb-1 flex flex-col flex-1">
-        <p className="text-gray-400 text-[11px] font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5">
-          <img src="/images/icon-gedung.png" alt="building" className="w-3.5 h-3.5 object-contain" />
+      {/* Content Section */}
+      <div className="p-4 flex flex-col flex-1">
+        {/* Company Name */}
+        <p className="text-gray-400 text-[10px] font-semibold uppercase tracking-wider mb-1 flex items-center gap-1">
+          <img src="/images/icon-gedung.png" alt="building" className="w-3 h-3 object-contain" />
           {job.company}
         </p>
 
-        <h3 className="font-black text-gray-900 text-lg leading-tight group-hover:text-maroon transition-colors line-clamp-2 mb-2">
+        {/* Job Title */}
+        <h3 className="font-bold text-gray-900 text-[14px] leading-snug group-hover:text-[#8B1538] transition-colors line-clamp-2 mb-2">
           {job.title}
         </h3>
 
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          <span className="text-[10px] font-extrabold px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-100 rounded-lg">
-            {job.type}
+        {/* Badge Info */}
+        <div className="flex flex-wrap gap-1 mb-2">
+          <span className="text-[9px] font-medium px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+            {job.location}
           </span>
-          <span className="text-[10px] font-extrabold px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-100 rounded-lg">
+          <span className="text-[9px] font-medium px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
             {job.hours}
           </span>
-          <span className="text-[10px] font-extrabold px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-100 rounded-lg">
-            {job.location}
+          <span className="text-[9px] font-medium px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+            {job.type}
           </span>
         </div>
 
-        <p className="text-gray-500 text-xs font-medium line-clamp-2 mb-4">
-          {job.description}
-        </p>
+        {/* Description */}
+        {job.description ? (
+          <p className="text-gray-500 text-[11px] leading-relaxed line-clamp-2 mb-auto">
+            {job.description}
+          </p>
+        ) : (
+          <p className="text-gray-400 text-[11px] italic mb-auto">
+            Deskripsi tidak tersedia
+          </p>
+        )}
 
-        <div className="flex items-end justify-between mt-auto pt-3 border-t border-gray-50">
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Est. Gaji</p>
-            <p className="font-black text-maroon text-[15px] flex items-center gap-1">
-              <img src="/images/icon-gaji.png" alt="gaji" className="w-4 h-4 object-contain" />
-              {job.salary}
-            </p>
-          </div>
+        {/* Footer */}
+        <div className="mt-4 pt-3 border-t border-gray-100">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-[8px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">Gaji Mulai Dari</p>
+              <p className="font-bold text-[#8B1538] text-[13px]">
+                {job.salary}
+              </p>
+              {job.minAge && (
+                <p className="text-[9px] text-gray-400 mt-0.5">Min. {job.minAge} tahun</p>
+              )}
+            </div>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onSave(job);
-            }}
-            className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-200 ${
-              isSaved
-                ? 'bg-maroon border-maroon text-white shadow-md shadow-maroon/20'
-                : 'bg-white border-gray-200 text-gray-400 hover:border-maroon hover:text-maroon'
-            }`}
-          >
-            <svg
-              className="w-4 h-4"
-              fill={isSaved ? "currentColor" : "none"}
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2.5}
+            {/* CTA Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(job);
+              }}
+              className="w-10 h-10 rounded-[14px] bg-[#8B1538] text-white flex items-center justify-center shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-            </svg>
-          </button>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -782,28 +879,29 @@ function AcceptedCard({ job, onRemove }) {
 // ─── SKELETON CARD (for loading state) ──────────────────────────────────────
 function SkeletonCard() {
   return (
-    <div className="bg-white/90 backdrop-blur-md rounded-[32px] overflow-hidden border border-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex flex-col pb-1 relative min-h-[480px]">
-      <div className="relative h-[200px] overflow-hidden p-2 flex-shrink-0">
-        <div className="relative w-full h-full rounded-[24px] overflow-hidden bg-gray-200 skeleton" />
+    <div className="bg-white rounded-[28px] overflow-hidden border border-gray-100 shadow-[0_4px_16px_rgba(0,0,0,0.06)] flex flex-col">
+      {/* Image */}
+      <div className="relative h-[190px] overflow-hidden flex-shrink-0">
+        <div className="w-full h-full bg-gray-200 skeleton" />
       </div>
-      <div className="px-4 py-3 flex flex-col flex-1">
-        <div className="h-5 w-20 bg-gray-200 rounded-lg mb-2 skeleton" />
-        <div className="h-6 bg-gray-200 rounded-lg mb-1 skeleton w-3/4" />
-        <div className="h-4 bg-gray-200 rounded-lg mb-3 skeleton w-1/2" />
-        <div className="flex gap-2 mb-3">
-          <div className="h-6 w-16 bg-gray-200 rounded-lg skeleton" />
-          <div className="h-6 w-20 bg-gray-200 rounded-lg skeleton" />
+      {/* Content */}
+      <div className="p-4 flex flex-col flex-1">
+        <div className="h-3 w-20 bg-gray-200 rounded mb-1 skeleton" />
+        <div className="h-5 bg-gray-200 rounded-lg mb-2 skeleton w-3/4" />
+        <div className="flex gap-1 mb-2">
+          <div className="h-4 w-12 bg-gray-200 rounded skeleton" />
+          <div className="h-4 w-14 bg-gray-200 rounded skeleton" />
+          <div className="h-4 w-12 bg-gray-200 rounded skeleton" />
         </div>
-        <div className="flex gap-2 mb-4">
-          <div className="h-6 w-24 bg-gray-200 rounded-md skeleton" />
-          <div className="h-6 w-20 bg-gray-200 rounded-md skeleton" />
-        </div>
-        <div className="flex items-end justify-between mt-auto pt-3 border-t border-gray-100">
-          <div>
-            <div className="h-3 w-16 bg-gray-200 rounded skeleton mb-1" />
-            <div className="h-5 w-28 bg-gray-200 rounded skeleton" />
+        <div className="h-4 bg-gray-200 rounded mb-auto skeleton w-full" />
+        <div className="mt-4 pt-3 border-t border-gray-100">
+          <div className="flex items-end justify-between">
+            <div>
+              <div className="h-2 w-16 bg-gray-200 rounded skeleton mb-1" />
+              <div className="h-4 w-20 bg-gray-200 rounded skeleton" />
+            </div>
+            <div className="h-10 w-10 bg-gray-200 rounded-[14px] skeleton" />
           </div>
-          <div className="h-10 w-10 bg-gray-200 rounded-2xl skeleton" />
         </div>
       </div>
     </div>
@@ -1346,22 +1444,61 @@ export default function App() {
 
   const handleSaveAdminJob = async (e) => {
     e.preventDefault();
+
+    // Validasi field wajib
+    if (!adminForm.title?.trim()) {
+      alert('Judul posisi wajib diisi!');
+      return;
+    }
+    if (!adminForm.company?.trim()) {
+      alert('Nama perusahaan wajib diisi!');
+      return;
+    }
+    if (!adminForm.location?.trim()) {
+      alert('Lokasi wajib diisi!');
+      return;
+    }
+
     try {
       const method = editingJobId ? 'PUT' : 'POST';
       const url = editingJobId ? `${API_URL}/jobs/${editingJobId}` : `${API_URL}/jobs`;
 
+      // Siapkan payload - konversi skills ke string jika array
+      const payload = {
+        title: adminForm.title?.trim() || '',
+        company: adminForm.company?.trim() || '',
+        location: adminForm.location?.trim() || '',
+        type: adminForm.type || 'Onsite',
+        category: adminForm.category || 'F&B',
+        skills: adminForm.skills?.trim() || '',
+        hours: adminForm.hours?.trim() || '',
+        minAge: parseInt(adminForm.minAge) || 18,
+        salary: adminForm.salary?.trim() || '',
+        description: adminForm.description?.trim() || '',
+        contactEmail: adminForm.contactEmail?.trim() || '',
+        contactPhone: adminForm.contactPhone?.trim() || '',
+        image: adminForm.image || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800',
+      };
+
+      console.log('Saving job to:', url);
+      console.log('Payload:', payload);
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...adminForm,
-          image:
-            adminForm.image || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800',
-        }),
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error(editingJobId ? 'Failed to update job' : 'Failed to save job');
 
-      const responseJob = await res.json();
+      // Baca response body untuk error detail
+      const responseData = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const errorMessage = responseData?.error || (editingJobId ? 'Failed to update job' : 'Failed to save job');
+        console.error('Server error:', responseData);
+        throw new Error(errorMessage);
+      }
+
+      const responseJob = responseData;
 
       if (editingJobId) {
         setJobs(jobs.map((j) => (j.id === editingJobId ? responseJob : j)));
@@ -1387,6 +1524,8 @@ export default function App() {
         contactPhone: '',
         image: '',
       });
+
+      alert(editingJobId ? 'Lowongan berhasil diupdate!' : 'Lowongan berhasil disimpan!');
     } catch (err) {
       console.error('Error saving job:', err);
       alert(
@@ -1971,81 +2110,89 @@ export default function App() {
             </div>
           </section>
 
-          {/* Filter Bar */}
-          {/* Tambahin id="jobs-section" biar scroll-nya pas ke sini */}
+          {/* Filter Bar - Tiruan Presisi Referensi */}
           <section
             id="jobs-section"
             ref={jobsRef}
-            className="px-6 md:px-10 mt-6 mb-8 relative z-[100]"
+            className="px-6 md:px-10"
           >
             <div className="max-w-7xl mx-auto scroll-mt-28">
-              <div className="filter-bar-wrapper relative z-[200] bg-white rounded-[24px] shadow-[0_8px_40px_rgba(0,0,0,0.08)] p-4 sm:p-5 flex flex-col sm:flex-row flex-wrap lg:flex-nowrap items-start sm:items-center gap-4 border border-gray-100 w-full max-w-full transform-gpu">
-                {[
-                  {
-                    label: 'Tipe Pekerjaan',
-                    options: allTypes,
-                    value: filterType,
-                    onChange: setFilterType,
-                  },
-                  {
-                    label: 'Kategori',
-                    options: allCategories,
-                    value: filterCategory[0] === 'Semua' ? 'Semua' : filterCategory[0],
-                    onChange: (v) => setFilterCategory([v]),
-                  },
-                  {
-                    label: 'Lokasi',
-                    options: allLocations,
-                    value: filterLocation[0] === 'Semua' ? 'Semua' : filterLocation[0],
-                    onChange: (v) => setFilterLocation([v]),
-                  },
-                  {
-                    label: 'Skill',
-                    options: allSkills,
-                    value: filterSkill[0] === 'Semua' ? 'Semua' : filterSkill[0],
-                    onChange: (v) => setFilterSkill([v]),
-                  },
-                ].map(({ label, options, value, onChange }, i) => {
-                  return (
-                  <React.Fragment key={label}>
-                    <div className="flex-1 min-w-0 sm:min-w-[140px] md:min-w-[160px] px-1 py-1 w-full sm:w-auto">
-                      <p className="text-[10px] font-black text-gray-400 mb-1.5 pl-1 uppercase tracking-widest whitespace-nowrap">
-                        {label}
-                      </p>
-                      <DropdownFilter
+              {/* Main Filter Card - 120px height */}
+              <div className="ref-filter-card">
+                <div className="ref-filter-row">
+                  {/* Tipe Pekerjaan - 15% */}
+                  <div className="ref-filter-item">
+                    <div className="ref-filter-content">
+                      <p className="ref-filter-label">Tipe Pekerjaan</p>
+                      <PremiumDropdown
                         label="Semua"
-                        options={options}
-                        selected={value}
-                        onSelect={onChange}
+                        options={allTypes}
+                        selected={filterType}
+                        onSelect={setFilterType}
                       />
                     </div>
-                    {i < 3 && (
-                      <div className="hidden lg:block w-px h-12 bg-gray-200 flex-shrink-0 self-center" />
-                    )}
-                  </React.Fragment>
-                );
-                })}
+                    <div className="ref-filter-separator" />
+                  </div>
 
-                <div className="w-full mt-2 lg:mt-0 px-1 lg:min-w-[200px] lg:self-end">
-                  <button
-                    onClick={() => handleNavClick('jobs')}
-                    className="w-full bg-gradient-to-r from-[#6b1020] to-[#8b1a2e] text-white px-9 py-4 rounded-2xl font-black text-[13px] uppercase tracking-widest flex items-center justify-center gap-3 hover:shadow-[0_8px_25px_rgba(61,10,20,0.4)] hover:-translate-y-1 transition-all shadow-md"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={3}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  {/* Kategori - 15% */}
+                  <div className="ref-filter-item">
+                    <div className="ref-filter-content">
+                      <p className="ref-filter-label">Kategori</p>
+                      <PremiumDropdown
+                        label="Semua"
+                        options={allCategories}
+                        selected={filterCategory[0] === 'Semua' ? 'Semua' : filterCategory[0]}
+                        onSelect={(v) => setFilterCategory([v])}
                       />
-                    </svg>
-                    Cari Lowongan
-                  </button>
+                    </div>
+                    <div className="ref-filter-separator" />
+                  </div>
+
+                  {/* Lokasi - 15% */}
+                  <div className="ref-filter-item">
+                    <div className="ref-filter-content">
+                      <p className="ref-filter-label">Lokasi</p>
+                      <PremiumDropdown
+                        label="Semua"
+                        options={allLocations}
+                        selected={filterLocation[0] === 'Semua' ? 'Semua' : filterLocation[0]}
+                        onSelect={(v) => setFilterLocation([v])}
+                      />
+                    </div>
+                    <div className="ref-filter-separator" />
+                  </div>
+
+                  {/* Skill - 15% */}
+                  <div className="ref-filter-item">
+                    <div className="ref-filter-content">
+                      <p className="ref-filter-label">Skill</p>
+                      <PremiumDropdown
+                        label="Semua"
+                        options={allSkills}
+                        selected={filterSkill[0] === 'Semua' ? 'Semua' : filterSkill[0]}
+                        onSelect={(v) => setFilterSkill([v])}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Tombol Cari - 40% */}
+                  <div className="ref-filter-search">
+                    <button
+                      onClick={() => handleNavClick('jobs')}
+                      className="ref-search-btn"
+                    >
+                      <svg
+                        className="ref-search-icon"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2.5}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      Cari Lowongan
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2100,13 +2247,13 @@ export default function App() {
 
               {/* Loading State - Show Skeleton Cards */}
               {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
                     <SkeletonCard key={i} />
                   ))}
                 </div>
               ) : filteredJobs.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredJobs.map((job) => (
                     <JobCard
                       key={job.id}
@@ -2136,10 +2283,10 @@ export default function App() {
       {/* ═══════════════════════════ JOBS PAGE ═══════════════════════════ */}
       {activeTab === 'jobs' && (
         <main className="animate-fade-in flex-1">
-          <section className="px-6 md:px-10 pt-10 pb-6">
+          <section className="px-6 md:px-10 pt-10 pb-16">
             <div className="max-w-6xl mx-auto">
               {/* Page Title */}
-              <div className="mb-8">
+              <div className="mb-10">
                 <span className="text-[18px] font-black uppercase tracking-[0.28em] text-maroon">
                   Direktori
                 </span>
@@ -2151,144 +2298,91 @@ export default function App() {
                 </p>
               </div>
 
-              {/* Filter Bar dengan Search */}
-              <div className="bg-white rounded-[32px] shadow-[0_16px_50px_rgba(0,0,0,0.06)] p-3.5 flex flex-col sm:flex-row flex-wrap lg:flex-nowrap items-start sm:items-center gap-3 border border-white mb-10 overflow-hidden w-full max-w-full">
-                {[
-                  {
-                    label: 'Tipe Pekerjaan',
-                    options: allTypes,
-                    value: filterType,
-                    onChange: setFilterType,
-                  },
-                  {
-                    label: 'Kategori',
-                    options: allCategories,
-                    value: filterCategory[0] === 'Semua' ? 'Semua' : filterCategory[0],
-                    onChange: (v) => setFilterCategory([v]),
-                  },
-                  {
-                    label: 'Lokasi',
-                    options: allLocations,
-                    value: filterLocation[0] === 'Semua' ? 'Semua' : filterLocation[0],
-                    onChange: (v) => setFilterLocation([v]),
-                  },
-                  {
-                    label: 'Skill',
-                    options: allSkills,
-                    value: filterSkill[0] === 'Semua' ? 'Semua' : filterSkill[0],
-                    onChange: (v) => setFilterSkill([v]),
-                  },
-                ].map(({ label, options, value, onChange }, i) => {
-                  console.log(`[Filter] ${label}: ${options?.length} items, data:`, options);
-                  return (
-                  <React.Fragment key={label}>
-                    <div className="flex-1 min-w-0 sm:min-w-[120px] md:min-w-[140px] px-2 py-1.5 w-full sm:w-auto">
-                      <p className="text-[10px] font-black text-gray-400 mb-1 pl-2 sm:pl-4 uppercase tracking-widest whitespace-nowrap">
-                        {label}
-                      </p>
-                      <DropdownFilter
+              {/* Filter Bar - Tiruan Presisi Referensi */}
+              <div className="ref-filter-card mb-10">
+                <div className="ref-filter-row">
+                  {/* Tipe Pekerjaan - 15% */}
+                  <div className="ref-filter-item">
+                    <div className="ref-filter-content">
+                      <p className="ref-filter-label">Tipe Pekerjaan</p>
+                      <PremiumDropdown
                         label="Semua"
-                        options={options}
-                        selected={value}
-                        onSelect={onChange}
+                        options={allTypes}
+                        selected={filterType}
+                        onSelect={setFilterType}
                       />
                     </div>
-                    {i < 3 && (
-                      <div className="hidden lg:block w-px h-12 bg-gray-200 flex-shrink-0" />
-                    )}
-                  </React.Fragment>
-                );
-                })}
+                    <div className="ref-filter-separator" />
+                  </div>
 
-                {/* Tombol / Input Search */}
-                <div className="w-full mt-3 lg:mt-0 px-2">
-                  {!searchOpen ? (
+                  {/* Kategori - 15% */}
+                  <div className="ref-filter-item">
+                    <div className="ref-filter-content">
+                      <p className="ref-filter-label">Kategori</p>
+                      <PremiumDropdown
+                        label="Semua"
+                        options={allCategories}
+                        selected={filterCategory[0] === 'Semua' ? 'Semua' : filterCategory[0]}
+                        onSelect={(v) => setFilterCategory([v])}
+                      />
+                    </div>
+                    <div className="ref-filter-separator" />
+                  </div>
+
+                  {/* Lokasi - 15% */}
+                  <div className="ref-filter-item">
+                    <div className="ref-filter-content">
+                      <p className="ref-filter-label">Lokasi</p>
+                      <PremiumDropdown
+                        label="Semua"
+                        options={allLocations}
+                        selected={filterLocation[0] === 'Semua' ? 'Semua' : filterLocation[0]}
+                        onSelect={(v) => setFilterLocation([v])}
+                      />
+                    </div>
+                    <div className="ref-filter-separator" />
+                  </div>
+
+                  {/* Skill - 15% */}
+                  <div className="ref-filter-item">
+                    <div className="ref-filter-content">
+                      <p className="ref-filter-label">Skill</p>
+                      <PremiumDropdown
+                        label="Semua"
+                        options={allSkills}
+                        selected={filterSkill[0] === 'Semua' ? 'Semua' : filterSkill[0]}
+                        onSelect={(v) => setFilterSkill([v])}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Tombol Cari - 40% */}
+                  <div className="ref-filter-search">
                     <button
                       onClick={() => {
                         setSearchOpen(true);
                         setSearchInputVal(searchTerm);
                       }}
-                      className="w-full sm:w-auto bg-gradient-to-r from-[#6b1020] to-[#8b1a2e] text-white px-6 lg:px-9 py-4 rounded-2xl font-black text-[13px] uppercase tracking-widest flex items-center justify-center gap-3 hover:shadow-[0_8px_25px_rgba(61,10,20,0.5)] hover:-translate-y-1 transition-all shadow-md"
+                      className="ref-search-btn"
                     >
                       <svg
-                        className="w-4 h-4"
+                        className="ref-search-icon"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
-                        strokeWidth={3}
+                        strokeWidth={2.5}
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                       </svg>
                       Cari Lowongan
                     </button>
-                  ) : (
-                    <form
-                      className="flex flex-col sm:flex-row gap-2 w-full"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        setSearchTerm(searchInputVal);
-                        setSearchOpen(false);
-                      }}
-                    >
-                      <div className="flex items-center gap-2 bg-gray-50 border-2 border-maroon rounded-2xl px-4 py-3 flex-1 w-full">
-                        <svg
-                          className="w-4 h-4 text-gray-400 flex-shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2.5}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                          />
-                        </svg>
-                        <input
-                          autoFocus
-                          type="text"
-                          placeholder="Cari posisi, perusahaan..."
-                          value={searchInputVal}
-                          onChange={(e) => {
-                            setSearchInputVal(e.target.value);
-                            setSearchTerm(e.target.value);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Escape') {
-                              setSearchOpen(false);
-                              setSearchInputVal(searchTerm);
-                            }
-                          }}
-                          className="flex-1 bg-transparent outline-none text-sm font-bold text-gray-800 placeholder-gray-400"
-                        />
-                        {searchInputVal && (
-                          <button
-                            type="button"
-                            onClick={() => setSearchInputVal('')}
-                            className="text-gray-400 hover:text-gray-600 transition-colors text-xs font-black"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                      <button
-                        type="submit"
-                        className="bg-gradient-to-r from-[#6b1020] to-[#8b1a2e] text-white px-6 py-3 rounded-2xl font-black text-[12px] uppercase tracking-widest hover:shadow-lg hover:-translate-y-0.5 transition-all shadow-md flex-shrink-0 w-full sm:w-auto"
-                      >
-                        Cari
-                      </button>
-                    </form>
-                  )}
+                  </div>
                 </div>
               </div>
 
               {/* Active filter info */}
               {(searchTerm || hasActiveFilter) && (
-                <div className="flex items-center justify-between mb-6 bg-white/70 rounded-2xl px-5 py-3 border border-white shadow-sm backdrop-blur-md">
+                <div className="flex items-center justify-between mb-8 bg-white/70 rounded-2xl px-5 py-3 border border-white shadow-sm backdrop-blur-md">
                   <p className="text-sm text-gray-600 font-bold">
                     {filteredJobs.length} hasil ditemukan
                     {searchTerm && (
@@ -2319,13 +2413,13 @@ export default function App() {
 
               {/* Job Grid with Loading State */}
               {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
                     <SkeletonCard key={i} />
                   ))}
                 </div>
               ) : filteredJobs.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredJobs.map((job) => (
                     <JobCard
                       key={job.id}

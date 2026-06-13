@@ -8,11 +8,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
-  overflow-y: auto;
+  padding: 20px;
 }
 
-/* Container utama */
+/* Container utama - di tengah */
 .login-container {
   position: relative;
   width: 900px;
@@ -20,18 +19,11 @@
   height: 560px;
   background: #ffffff;
   border-radius: 28px;
-  box-shadow:
-    0 25px 50px -12px rgba(144, 29, 49, 0.15),
-    0 10px 20px -5px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 25px 50px -12px rgba(144, 29, 49, 0.15),
+              0 10px 20px -5px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   border: 1px solid rgba(144, 29, 49, 0.1);
   margin: 0 auto;
-  transition: height 0.4s ease;
-}
-
-/* Container saat mode register - lebih tinggi */
-.login-container.register-mode {
-  height: 560px;
 }
 
 /* Panel Geser Konten Utama */
@@ -40,14 +32,13 @@
   top: 0;
   height: 100%;
   transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  padding: 30px 40px;
+  padding: 50px 40px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  overflow-y: auto;
+  justify-content: center;
 }
 
-/* Form Admin (Kiri) */
+/* Form di sebelah kiri (Admin) */
 .admin-container {
   left: 0;
   width: 50%;
@@ -55,7 +46,7 @@
   z-index: 1;
 }
 
-/* Form User (Kanan) */
+/* Form di sebelah kanan (User) */
 .user-container {
   left: 0;
   width: 50%;
@@ -63,7 +54,7 @@
   opacity: 1;
 }
 
-/* Mode Aktif Admin */
+/* Mode Aktif (Saat beralih ke Admin) */
 .login-container.admin-panel-active .user-container {
   transform: translateX(100%);
   opacity: 0;
@@ -78,19 +69,17 @@
 }
 
 @keyframes showLogin {
-  0%,
-  49.99% {
+  0%, 49.99% {
     opacity: 0;
     z-index: 1;
   }
-  50%,
-  100% {
+  50%, 100% {
     opacity: 1;
     z-index: 5;
   }
 }
 
-/* Overlay Merah */
+/* Overlay (Bagian Merah Burgundy SkillShift yang bergeser) */
 .overlay-container {
   position: absolute;
   top: 0;
@@ -132,12 +121,14 @@
   top: 0;
   height: 100%;
   width: 50%;
+  transform: translateX(0);
   transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .overlay-left {
   transform: translateX(-20%);
 }
+
 .login-container.admin-panel-active .overlay-left {
   transform: translateX(0);
 }
@@ -146,11 +137,14 @@
   right: 0;
   transform: translateX(0);
 }
+
 .login-container.admin-panel-active .overlay-right {
   transform: translateX(20%);
 }
 
-/* ── RESPONSIVE MOBILE ── */
+/* ============================================
+   RESPONSIVE MOBILE
+   ============================================ */
 @media (max-width: 768px) {
   .login-container {
     height: auto;
@@ -161,10 +155,6 @@
     margin: 12px;
     width: calc(100vw - 24px);
     max-width: 100vw;
-  }
-
-  .login-container.register-mode {
-    height: auto;
   }
 
   .login-form-container {
@@ -192,7 +182,9 @@
   }
 }
 
-/* ── TOAST ── */
+/* ============================================
+   TOAST NOTIFICATION (di component)
+   ============================================ */
 .login-toast {
   position: fixed;
   top: 20px;
@@ -213,9 +205,11 @@
 .login-toast-success {
   background: #059669;
 }
+
 .login-toast-error {
   background: #be123c;
 }
+
 .login-toast-info {
   background: #901d31;
 }
@@ -229,70 +223,4 @@
     transform: translateY(0);
     opacity: 1;
   }
-}
-
-/* ── INPUT STYLING IMPROVEMENTS ── */
-.login-form-container input[type="email"],
-.login-form-container input[type="password"],
-.login-form-container input[type="text"] {
-  padding: 14px 16px !important;
-  transition: all 0.25s ease !important;
-  font-size: 14px !important;
-}
-
-.login-form-container input[type="email"]:hover,
-.login-form-container input[type="password"]:hover,
-.login-form-container input[type="text"]:hover {
-  border-color: #d1d5db !important;
-  background: #fafafa !important;
-}
-
-.login-form-container input[type="email"]:focus,
-.login-form-container input[type="password"]:focus,
-.login-form-container input[type="text"]:focus {
-  border-color: #901d31 !important;
-  box-shadow: 0 0 0 4px rgba(144, 29, 49, 0.1) !important;
-  background: #ffffff !important;
-  outline: none !important;
-}
-
-/* ── PASSWORD INPUT SPECIFIC STYLING ── */
-.login-form-container input[type="password"] {
-  letter-spacing: 0.15em !important;
-  font-size: 16px !important;
-}
-
-.login-form-container input[type="password"]::placeholder {
-  letter-spacing: 0.05em !important;
-  font-size: 14px !important;
-}
-
-/* ── INPUT LABEL STYLING ── */
-.login-form-container label {
-  color: #6b7280 !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.05em !important;
-  text-transform: uppercase !important;
-}
-
-/* ── SPINNER ANIMATION ── */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-/* ── BUTTON HOVER EFFECTS ── */
-.login-form-container button[type="submit"]:not(:disabled):hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(144, 29, 49, 0.3);
-}
-
-.login-form-container button[type="submit"]:not(:disabled):active {
-  transform: translateY(0);
 }

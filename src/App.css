@@ -978,22 +978,6 @@ div[class*="container"],
   }
 }
 
-/* ── MOBILE DROPDOWN FILTER FIX ── */
-@media (max-width: 640px) {
-  .dropdown-filter-btn {
-    min-width: 0 !important;
-    width: 100% !important;
-    max-width: 120px !important;
-  }
-
-  .dropdown-filter-btn span {
-    max-width: 80px !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
 /* ── MOBILE SAVED/ACCEPTED CARDS FIX ── */
 @media (max-width: 640px) {
   .saved-card,
@@ -1150,14 +1134,14 @@ main {
 }
 
 /* ── DROPDOWN Z-INDEX AND VISIBILITY FIX ── */
-.relative.flex-shrink-0 {
+.filter-dropdown-container {
   z-index: auto !important;
   position: relative !important;
   overflow: visible !important;
 }
 
 /* Dropdown menu - ensure it appears above everything */
-.relative.flex-shrink-0 > div:last-child {
+.filter-dropdown-container > div:last-child {
   z-index: 99999 !important;
   position: absolute !important;
   top: 100% !important;
@@ -1165,23 +1149,10 @@ main {
   visibility: visible !important;
   opacity: 1 !important;
   display: block !important;
-  min-width: 200px;
+  min-width: 240px;
   width: auto;
   margin-top: 8px;
   pointer-events: auto !important;
-  background: white !important;
-}
-
-/* Force show dropdown options */
-.dropdown-options {
-  visibility: visible !important;
-  opacity: 1 !important;
-  height: auto !important;
-  max-height: none !important;
-  overflow: visible !important;
-  display: block !important;
-  z-index: 99999 !important;
-  position: absolute !important;
   background: white !important;
 }
 
@@ -1197,7 +1168,7 @@ main {
     overflow: visible !important;
   }
 
-  .filter-bar-wrapper .relative {
+  .filter-bar-wrapper .filter-dropdown-container {
     position: relative !important;
     z-index: 60 !important;
   }
@@ -1528,45 +1499,6 @@ main {
   }
 }
 
-/* ── RESPONSIVE FILTER BAR ── */
-@media (max-width: 640px) {
-  .filter-bar {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow: visible !important;
-  }
-
-  .filter-bar > div {
-    flex-wrap: wrap;
-    width: 100% !important;
-    min-width: 0 !important;
-    padding: 4px 0 !important;
-  }
-
-  /* Perbaiki dropdown filter di mobile */
-  .filter-bar .relative {
-    min-width: 0 !important;
-    width: 100% !important;
-    flex: 1 1 100% !important;
-  }
-
-  .filter-bar .relative button {
-    min-width: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    justify-content: space-between !important;
-  }
-
-  .filter-bar .relative button span {
-    max-width: 70px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-}
-
 /* ── JOB CARD GRID FIX ── */
 @media (max-width: 480px) {
   .min-h-\[480px\] {
@@ -1646,5 +1578,447 @@ main {
   .stats-card-fixed > div {
     flex: 1 1 33% !important;
     min-width: 0 !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PREMIUM CUSTOM DROPDOWN - LinkedIn/Linear Style
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Premium Dropdown Container ── */
+.premium-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.premium-dropdown:hover {
+  z-index: 150;
+}
+
+/* ── Premium Trigger Button ── */
+.premium-dropdown-trigger {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  background: #ffffff;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.premium-dropdown-trigger:hover {
+  border-color: #d1d5db;
+  background: #fafafa;
+}
+
+.premium-dropdown-trigger:focus {
+  border-color: #8b182a;
+  box-shadow: 0 0 0 3px rgba(139, 24, 42, 0.1);
+}
+
+.premium-dropdown-trigger.open {
+  border-color: #8b182a;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(139, 24, 42, 0.1);
+}
+
+.premium-dropdown-trigger.active {
+  color: #8b182a;
+  font-weight: 600;
+  border-color: #8b182a;
+  background: rgba(139, 24, 42, 0.03);
+}
+
+/* ── Trigger Value Text ── */
+.premium-dropdown-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  text-align: left;
+}
+
+/* ── Trigger Chevron Icon ── */
+.premium-dropdown-chevron {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #9ca3af;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-dropdown-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+/* ── Premium Dropdown Menu ── */
+.premium-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 99999;
+
+  /* Hidden by default */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.premium-dropdown-menu.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ── Dropdown Inner Container ── */
+.premium-dropdown-inner {
+  background: #ffffff;
+  border: 1px solid #8b182a;
+  border-top: none;
+  border-radius: 0 0 16px 16px;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.12),
+    0 2px 10px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+/* ── Dropdown Item ── */
+.premium-dropdown-item {
+  width: 100%;
+  padding: 14px 18px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.premium-dropdown-item:first-child {
+  padding-top: 16px;
+}
+
+.premium-dropdown-item:last-child {
+  padding-bottom: 16px;
+}
+
+.premium-dropdown-item:hover,
+.premium-dropdown-item.highlighted {
+  background: #f9fafb;
+  color: #1f2937;
+}
+
+.premium-dropdown-item.selected {
+  background: rgba(139, 24, 42, 0.06);
+  color: #8b182a;
+  font-weight: 600;
+}
+
+.premium-dropdown-item.selected:hover,
+.premium-dropdown-item.selected.highlighted {
+  background: rgba(139, 24, 42, 0.1);
+}
+
+/* ── Dropdown Item Text ── */
+.premium-dropdown-item-text {
+  flex: 1;
+}
+
+/* ── Dropdown Check Icon ── */
+.premium-dropdown-check {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #8b182a;
+}
+
+/* ── Custom Scrollbar ── */
+.premium-dropdown-inner::-webkit-scrollbar {
+  width: 6px;
+}
+
+.premium-dropdown-inner::-webkit-scrollbar-track {
+  background: #f9fafb;
+}
+
+.premium-dropdown-inner::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 6px;
+}
+
+.premium-dropdown-inner::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   REFERENCE FILTER - PRECISE COPY
+   Layout: 15% | 15% | 15% | 15% | 40%
+   Height: 120px min
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Main Filter Card ── */
+.ref-filter-card {
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  overflow: visible;
+  position: relative;
+  z-index: 100;
+}
+
+/* ── Main Row - Height 120px ── */
+.ref-filter-row {
+  display: flex;
+  align-items: stretch;
+  min-height: 120px;
+  padding: 24px 32px;
+}
+
+/* ── Filter Item (15% width) ── */
+.ref-filter-item {
+  display: flex;
+  align-items: stretch;
+  width: 15%;
+  flex-shrink: 0;
+}
+
+.ref-filter-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+}
+
+/* ── Filter Label ── */
+.ref-filter-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+  white-space: nowrap;
+}
+
+/* ── Vertical Separator ── */
+.ref-filter-separator {
+  width: 1px;
+  background: #e5e7eb;
+  margin: 0 24px;
+  flex-shrink: 0;
+}
+
+/* ── Search Section (40% width) ── */
+.ref-filter-search {
+  width: 40%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding-left: 24px;
+}
+
+/* ── Search Button - MUCH LARGER ── */
+.ref-search-btn {
+  width: 100%;
+  height: 72px;
+  padding: 0 40px;
+  background: linear-gradient(135deg, #6b1020 0%, #8b1a2e 100%);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 20px rgba(107, 16, 32, 0.3);
+}
+
+.ref-search-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(107, 16, 32, 0.4);
+  background: linear-gradient(135deg, #5a0d1a 0%, #6b1020 100%);
+}
+
+.ref-search-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 15px rgba(107, 16, 32, 0.25);
+}
+
+.ref-search-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* ── Spacing: Hero → Filter ── */
+section#jobs-section {
+  margin-top: 48px;
+  margin-bottom: 48px;
+}
+
+/* ── Spacing: Filter → Lowongan ── */
+section#jobs-section + section {
+  margin-top: 0;
+}
+
+/* ── Fix overflow ── */
+section#jobs-section,
+section#jobs-section > div {
+  overflow: visible !important;
+  position: relative !important;
+}
+
+.ref-filter-card {
+  overflow: visible !important;
+}
+
+/* ── Job cards below dropdown ── */
+.job-card-grid,
+.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 {
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE - TABLET
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .ref-filter-row {
+    min-height: 140px;
+    padding: 20px 24px;
+    flex-wrap: wrap;
+  }
+
+  .ref-filter-item {
+    width: 23%;
+    flex-shrink: 0;
+  }
+
+  .ref-filter-separator {
+    margin: 0 16px;
+  }
+
+  .ref-filter-search {
+    width: 100%;
+    padding-left: 0;
+    padding-top: 20px;
+  }
+
+  .ref-search-btn {
+    height: 64px;
+    padding: 0 32px;
+    font-size: 14px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE - MOBILE
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  section#jobs-section {
+    margin-top: 32px;
+    margin-bottom: 32px;
+  }
+
+  .ref-filter-card {
+    border-radius: 16px;
+  }
+
+  .ref-filter-row {
+    min-height: auto;
+    padding: 20px;
+    flex-direction: column;
+  }
+
+  .ref-filter-item {
+    width: 100%;
+    height: 64px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .ref-filter-item:last-child {
+    border-bottom: none;
+  }
+
+  .ref-filter-separator {
+    display: none;
+  }
+
+  .ref-filter-content {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .ref-filter-label {
+    margin-bottom: 0;
+    margin-right: 16px;
+  }
+
+  .premium-dropdown {
+    max-width: 180px;
+  }
+
+  .premium-dropdown-trigger {
+    height: 48px;
+    padding: 0 14px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .premium-dropdown-menu.open {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    max-width: calc(100vw - 32px);
+  }
+
+  .ref-filter-search {
+    width: 100%;
+    padding-left: 0;
+    padding-top: 20px;
+    margin-top: 8px;
+  }
+
+  .ref-search-btn {
+    height: 56px;
+    padding: 0 24px;
+    font-size: 13px;
+    gap: 10px;
+  }
+
+  .ref-search-icon {
+    width: 18px;
+    height: 18px;
   }
 }
