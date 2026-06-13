@@ -1599,7 +1599,14 @@ export default function App() {
 
         if (!res.ok) throw new Error('Gagal menyimpan lowongan');
 
-        setSavedJobs((prev) => [...prev, job]);
+        // Refresh saved jobs from server to ensure consistency
+        const savedRes = await fetch(`${API_URL}/saved/${userId}`);
+        if (savedRes.ok) {
+          const savedData = await savedRes.json();
+          setSavedJobs(savedData.map(normalizeJob));
+        } else {
+          setSavedJobs((prev) => [...prev, job]);
+        }
       }
     } catch (err) {
       console.error('Error toggle saved job:', err);
