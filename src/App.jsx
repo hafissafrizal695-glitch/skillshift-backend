@@ -1463,11 +1463,16 @@ export default function App() {
       const method = editingJobId ? 'PUT' : 'POST';
       const url = editingJobId ? `${API_URL}/jobs/${editingJobId}` : `${API_URL}/jobs`;
 
-      // Siapkan payload - konversi skills string ke array
-      const skillsArray = adminForm.skills
-        ?.split(',')
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0) || [];
+      // Siapkan payload - konversi skills ke array
+      let skillsArray = [];
+      if (Array.isArray(adminForm.skills)) {
+        skillsArray = adminForm.skills;
+      } else if (typeof adminForm.skills === 'string') {
+        skillsArray = adminForm.skills
+          .split(',')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0);
+      }
 
       const payload = {
         title: adminForm.title?.trim() || '',
@@ -1495,7 +1500,12 @@ export default function App() {
       });
 
       // Baca response body untuk error detail
-      const responseData = await res.json().catch(() => ({}));
+      let responseData;
+      try {
+        responseData = await res.json();
+      } catch (e) {
+        responseData = { error: `Server returned status ${res.status}` };
+      }
 
       if (!res.ok) {
         const errorMessage = responseData?.error || (editingJobId ? 'Failed to update job' : 'Failed to save job');
